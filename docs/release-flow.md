@@ -1,70 +1,37 @@
 # Fluxo de releases
 
-Uma release branch por sprint. A `main` é protegida: só recebe a release no
-fim da sprint (e hotfixes). Versões seguem [SemVer](https://semver.org/lang/pt-BR/)
-e cada versão publicada é uma tag na `main`.
+As regras ficam em [RELEASING.md](../RELEASING.md), que vem do
+[release-kit](https://github.com/Kaina-Ribeiro/release-kit). Tags, GitHub
+releases, novas `release/*` e sync PRs são criados só pela automação
+([.github/workflows/release.yml](../.github/workflows/release.yml)); nunca à mão.
 
+## O que é específico do ArenaZ
+
+- **Ticket:** o do Linear, time `BOOK`. Branch `feat/BOOK-12-login`, título do
+  PR `feat(BOOK-12): add login`. O check `conventions` recusa o resto.
+- **Release aberta:** os PRs de feature e correção vão para a `release/vX.Y`
+  aberta (hoje `release/v1.2`), nunca para a `main`.
+- **Demo:** a release aberta é o que sobe no Cubeship
+  ([infra/deploy/README.md](../infra/deploy/README.md)).
+- **CI:** o [ci.yml](../.github/workflows/ci.yml) continua rodando os testes; o
+  [pr-checks.yml](../.github/workflows/pr-checks.yml) roda `checks` (install,
+  lint, typecheck) e `conventions`.
+- **Tags antigas:** `v1.0.0` e `v1.1.0` foram criadas à mão, antes da
+  automação. O `node .github/scripts/release.mjs status` avisa delas; é esperado.
+
+## Ajustes do repositório (para um admin aplicar)
+
+Rodar da raiz do repo, depois de ler a seção "Setup" do `RELEASING.md`:
+
+```bash
+gh api -X PATCH repos/silva-luiz/arenaz-v2 -F allow_merge_commit=true -F allow_squash_merge=true -F allow_rebase_merge=false
+gh api -X PUT repos/silva-luiz/arenaz-v2/actions/permissions/workflow -f default_workflow_permissions=read -F can_approve_pull_request_reviews=true
+gh secret set RELEASE_TOKEN --repo silva-luiz/arenaz-v2
+gh api -X POST repos/silva-luiz/arenaz-v2/rulesets --input .github/rulesets/default-branch.json
+gh api -X POST repos/silva-luiz/arenaz-v2/rulesets --input .github/rulesets/version-lines.json
+gh api -X POST repos/silva-luiz/arenaz-v2/rulesets --input .github/rulesets/version-tags.json
+gh variable set TICKET_PATTERN --repo silva-luiz/arenaz-v2 --body 'BOOK-\d+'
 ```
-main  ──●────────────────────────●──────────●─────
-        │ v1.1.0                 │ v1.2.0   │ v1.2.1 (hotfix)
-        └─ release/v1.2 ─●──●──●─┘          │
-              feat/* ────┘  │  │            └─ merge de volta na release aberta
-              fix/*  ───────┘  │
-```
 
-## Branches
-
-| Branch            | Sai de         | PR vai para    | Dura        |
-| ----------------- | -------------- | -------------- | ----------- |
-| `main`            | —              | —              | sempre      |
-| `release/vX.Y`    | `main`         | `main`         | uma sprint  |
-| `feat/*`, `fix/*` | release aberta | release aberta | até o merge |
-| `hotfix/*`        | `main`         | `main`         | até o merge |
-
-## Sprint, passo a passo
-
-1. **Início:** criar `release/vX.Y` a partir da `main` (ex.: `release/v1.2`).
-2. **Durante:** cada feature ou correção sai da release e volta por PR para
-   ela. A release é o que sobe na demo do Cubeship
-   ([infra/deploy/README.md](../infra/deploy/README.md)).
-3. **Fim:** um PR `release/vX.Y` → `main`. Depois do merge:
-   - tag anotada na `main`: `git tag -a vX.Y.0 -m "vX.Y.0: <resumo>"` e
-     `git push origin vX.Y.0`;
-   - deploy;
-   - apagar a `release/vX.Y`.
-
-## Hotfix
-
-Para um bug em produção que não pode esperar a sprint:
-
-1. `hotfix/<nome>` a partir da `main`, PR para a `main`.
-2. Tag do patch: `vX.Y.Z+1` (ex.: `v1.2.1`).
-3. Merge da `main` na release aberta. Sem isso, o próximo merge da release
-   desfaz o hotfix.
-
-## Versões
-
-- **Minor** (`v1.2.0`): o fim de cada sprint.
-- **Patch** (`v1.2.1`): hotfix.
-- **Major** (`v2.0.0`, `release/v2`): só quando algo quebra compatibilidade
-  (contrato da API, dados que precisam de migração manual etc.).
-
-Regras: a release dura uma sprint e é apagada depois do merge. Release de longa
-duração diverge da `main` (a antiga `release/v1.1` chegou a 132 commits de um
-lado e 105 do outro).
-
-## Proteção da `main` (para um admin do repo aplicar)
-
-Em **Settings → Rules → Rulesets → New branch ruleset**:
-
-- **Nome:** `main`; **Enforcement:** Active; **Target:** branch `main`.
-- **Restrict deletions** e **Block force pushes**.
-- **Require a pull request before merging**, com 1 aprovação.
-- **Require status checks to pass:** `ci`, com a branch atualizada antes do
-  merge.
-
-Um segundo ruleset igual para `release/**`, sem a aprovação obrigatória, evita
-push direto na release.
-
-O CI ([.github/workflows/ci.yml](../.github/workflows/ci.yml)) roda em todo PR e
-em push na `main`, `release/**` e `hotfix/**`.
+Os rulesets são o que protege a `main`. Antes de criá-los, listar os que já
+existem: `gh api repos/silva-luiz/arenaz-v2/rulesets`.
