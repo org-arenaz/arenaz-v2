@@ -11,6 +11,8 @@
       "**",
       "!**/pnpm-lock.yaml",
       "!docs/design/prototipo",
+      "!.github/scripts/release.mjs",
+      "!.github/rulesets",
       "!**/.env.example",
       "!apps/web/e2e/playwright-report",
       "!apps/web/e2e/test-results",
