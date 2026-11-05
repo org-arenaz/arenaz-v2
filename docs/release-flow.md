@@ -24,14 +24,14 @@ releases, novas `release/*` e sync PRs são criados só pela automação
 Rodar da raiz do repo, depois de ler a seção "Setup" do `RELEASING.md`:
 
 ```bash
-gh api -X PATCH repos/silva-luiz/arenaz-v2 -F allow_merge_commit=true -F allow_squash_merge=true -F allow_rebase_merge=false
-gh api -X PUT repos/silva-luiz/arenaz-v2/actions/permissions/workflow -f default_workflow_permissions=read -F can_approve_pull_request_reviews=true
-gh secret set RELEASE_TOKEN --repo silva-luiz/arenaz-v2
-gh api -X POST repos/silva-luiz/arenaz-v2/rulesets --input .github/rulesets/default-branch.json
-gh api -X POST repos/silva-luiz/arenaz-v2/rulesets --input .github/rulesets/version-lines.json
-gh api -X POST repos/silva-luiz/arenaz-v2/rulesets --input .github/rulesets/version-tags.json
-gh variable set TICKET_PATTERN --repo silva-luiz/arenaz-v2 --body 'BOOK-\d+'
+gh api -X PATCH repos/org-arenaz/arenaz-v2 -F allow_merge_commit=true -F allow_squash_merge=true -F allow_rebase_merge=false
+gh api -X PUT repos/org-arenaz/arenaz-v2/actions/permissions/workflow -f default_workflow_permissions=read -F can_approve_pull_request_reviews=true
+gh secret set RELEASE_TOKEN --repo org-arenaz/arenaz-v2
+gh api -X POST repos/org-arenaz/arenaz-v2/rulesets --input .github/rulesets/default-branch.json
+gh api -X POST repos/org-arenaz/arenaz-v2/rulesets --input .github/rulesets/version-lines.json
+gh api -X POST repos/org-arenaz/arenaz-v2/rulesets --input .github/rulesets/version-tags.json
+gh variable set TICKET_PATTERN --repo org-arenaz/arenaz-v2 --body 'BOOK-\d+'
 ```
 
 Os rulesets são o que protege a `main`. Antes de criá-los, listar os que já
-existem: `gh api repos/silva-luiz/arenaz-v2/rulesets`.
+existem: `gh api repos/org-arenaz/arenaz-v2/rulesets`.
